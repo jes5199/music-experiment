@@ -31,6 +31,18 @@ def delay_fft( delay, fft_data )
   return r
 end
 
+def fft_to_file( fft, filename, info )
+  result_data = FFTW3.ifft( fft )
+  result_buffer = RubyAudio::Buffer.new("float", target_data.size, 1)
+  i = 0
+  result_data.each do |r|
+    result_buffer[i] = r.real
+    i += 1
+  end
+  output = RubyAudio::Sound.new(filename, "w", info)
+  output.write(result_buffer)
+  output.close
+end
 
 
 target = RubyAudio::Sound.open("AmenMono.wav")
@@ -50,7 +62,7 @@ sample_fft = FFTW3.fft( sample_data.entries )
 result_fft = NArray.new("complex", target_fft.size)
 
 p target_fft
-30.times do
+1.times do
   corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
   best_match = find_max(corr)
@@ -64,15 +76,4 @@ p target_fft
   p target_fft
 end
 
-result_data = FFTW3.ifft( result_fft )
-result_buffer = RubyAudio::Buffer.new("float", target_data.size, 1)
-i = 0
-result_data.each do |r|
-  result_buffer[i] = r.real
-  i += 1
-end
-
-#require 'ruby-debug'; debugger; true #DEBUG!
-output = RubyAudio::Sound.new("output.wav", "w", target.info)
-output.write(result_buffer)
-output.close
+fft_to_file( result_fft, "output.wav", target.info )
