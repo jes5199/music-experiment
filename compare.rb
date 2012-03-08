@@ -69,9 +69,6 @@ result_buffer = RubyAudio::Buffer.new("float", target_data.size, 1)
 i = 0
 result_data.each do |r|
   result_buffer[i] = r.real
-  if r.real > 1
-    puts i
-  end
   i += 1
 end
 
