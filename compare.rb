@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'fftw3'
 require 'ruby-audio'
+require 'algorithms'
 
 def find_max(c)
   max_i = -1
@@ -52,7 +53,8 @@ end
 target = RubyAudio::Sound.open("AmenMono.wav")
 frames_per_second = target.info.samplerate
 
-sample = RubyAudio::Sound.open("snare1.wav")
+sample_name = "snare1.wav"
+sample = RubyAudio::Sound.open(sample_name)
 
 target_data = target.read(:float, frames_per_second * 20)
 sample_data = RubyAudio::Buffer.new("float", target_data.size, 1)
@@ -67,21 +69,28 @@ result_fft = NArray.new("complex", target_fft.size)
 
 corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
+heap = Containers::MaxHeap.new
 window_size = (frames_per_second / 10)
-local_maximum = 0
+
+local_maximum = -1
 i = -1
 corr.each do |x| i+=1;
-  if local_maximum < (i - window_size)
+  if local_maximum < (i - window_size) && local_maximum >= 0
     p( local_maximum / frames_per_second.to_f )
-    delayed_sample_fft = delay_fft( local_maximum, sample_fft )
-    result_fft += delayed_sample_fft
-    fft_to_file( result_fft,   "output.wav", target_data.size, target.info )
-    local_maximum = i
+    heap.push [corr[i].real, local_maximum, sample_name, sample_fft]
+    local_maximum = -1
   end
 
   if corr[i] > corr[local_maximum]
     local_maximum = i
   end
+end
+
+while heap.max
+  score, offset, sample_name, sample_fft = heap.pop
+  p([ offset / frames_per_second.to_f, sample_name])
+  delayed_sample_fft = delay_fft( offset, sample_fft )
+  result_fft += delayed_sample_fft
 end
 
 fft_to_file( result_fft,   "output.wav", target_data.size, target.info )
