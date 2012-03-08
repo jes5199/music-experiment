@@ -24,7 +24,7 @@ def delay_fft( delay, fft_data )
   k = 0 # fft frame number
 
   fft_data.each do |f|
-    r[k] = f * Complex(0, (-2 * Math::PI * k * _D / _N))
+    r[k] = f * ( Math::E ** Complex(0, (-2 * Math::PI * k * _D / _N)) )
     k += 1
   end
 
