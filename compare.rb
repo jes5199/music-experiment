@@ -25,35 +25,34 @@ target_data = target.read(:float, frames_per_second * 20)
 sample_data = RubyAudio::Buffer.new("float", target_data.size, 1)
 sample.read(sample_data)
 sample_data[target_data.real_size - 1] = 0
-p sample_data.real_size
 
 target_fft = FFTW3.fft( target_data.entries )
 sample_fft = FFTW3.fft( sample_data.entries )
 
-# corr = FFTW3.ifft(target_fft * sample_fft.conj)
+corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
-# best_match = find_max(corr)
-# p best_match
+best_match = find_max(corr)
+p best_match
 
-sample_data2 = RubyAudio::Buffer.new("float", target_data.size, 1)
-n = 1
-sample_data.each{ |d|
-  sample_data2[n % sample_data.real_size] = d
-  n += 1
-}
-p sample_data2.real_size
-sample2_fft = FFTW3.fft( sample_data2.entries )
 
-(0..5).each do |n|
-  p(sample2_fft[n] / sample_fft[n])
+def delay_fft( delay, fft_data )
+  r = NArray.new("complex", fft_data.size)
+
+  _D = delay
+  _N = fft_data.size
+  k = 0 # fft frame number
+
+  fft_data.each do |f|
+    r[k] = f * Complex(0, (-2 * Math::PI * k * _D / _N))
+    k += 1
+  end
+
+  return r
 end
 
-_D = 1 # delay
-_N = sample_fft.size
-k = 1 # fft frame number
 
-Complex(0, (-2 * Math::PI * k * _D / _N))
+delayed_sample_fft = delay_fft( best_match, sample_fft )
 
-
+p(target_fft - delayed_sample_fft)
 
 # I want to rotate the sample's fft to be at the best_match offset
