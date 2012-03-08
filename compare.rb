@@ -46,8 +46,11 @@ sample_data[target_data.real_size - 1] = 0
 target_fft = FFTW3.fft( target_data.entries )
 sample_fft = FFTW3.fft( sample_data.entries )
 
+
+result_fft = NArray.new("complex", target_fft.size)
+
 p target_fft
-5.times do
+1.times do
   corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
   best_match = find_max(corr)
@@ -55,8 +58,23 @@ p target_fft
 
   delayed_sample_fft = delay_fft( best_match, sample_fft )
 
-  target_fft = target_fft - delayed_sample_fft
+  target_fft -= delayed_sample_fft
+  result_fft += delayed_sample_fft
 
   p target_fft
 end
 
+result_data = FFTW3.ifft( result_fft )
+result_buffer = RubyAudio::Buffer.new("float", target_data.size, 1)
+i = 0
+result_data.each do |r|
+  result_buffer[i] = r.real
+  if r.real > 1
+    puts i
+  end
+  i += 1
+end
+
+#require 'ruby-debug'; debugger; true #DEBUG!
+output = RubyAudio::Sound.new("output.wav", "w", target.info)
+output.write(result_buffer)
