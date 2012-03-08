@@ -50,7 +50,7 @@ sample_fft = FFTW3.fft( sample_data.entries )
 result_fft = NArray.new("complex", target_fft.size)
 
 p target_fft
-1.times do
+30.times do
   corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
   best_match = find_max(corr)
@@ -78,3 +78,4 @@ end
 #require 'ruby-debug'; debugger; true #DEBUG!
 output = RubyAudio::Sound.new("output.wav", "w", target.info)
 output.write(result_buffer)
+output.close
