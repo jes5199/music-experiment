@@ -56,6 +56,8 @@ target_data = target.read(:float, frames_per_second * 20)
 target_fft = FFTW3.fft( target_data.entries )
 
 heap = Containers::MaxHeap.new
+inhibitions = {}
+ffts_by_name = {}
 
 ["snare1.wav", "crash.wav"].each do |sample_name|
   puts sample_name
@@ -66,6 +68,7 @@ heap = Containers::MaxHeap.new
   sample_data[target_data.real_size - 1] = 0
 
   sample_fft = FFTW3.fft( sample_data.entries )
+  ffts_by_name[sample_name] = sample_fft
 
   corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
@@ -78,7 +81,7 @@ heap = Containers::MaxHeap.new
       value = corr[i].real
       if value > 0
         p([ local_maximum / frames_per_second.to_f, value] )
-        heap.push [corr[i].real, local_maximum, sample_name, sample_fft]
+        heap.push [value, local_maximum, sample_name, sample_fft]
       end
       local_maximum = -1
     end
@@ -87,18 +90,43 @@ heap = Containers::MaxHeap.new
       local_maximum = i
     end
   end
+
+  inhibitions[sample_name] = []
+end
+
+sample_sample_correlations = {}
+ffts_by_name.each do |sample1_name, sample1_fft|
+  sample_sample_correlations[sample1_name] = {}
+  ffts_by_name.each do |sample2_name, sample2_fft|
+    puts "#{sample1_name} vs #{sample2_name}"
+    corr = FFTW3.ifft(sample1_fft * sample2_fft.conj)
+    sample_sample_correlations[sample1_name][sample2_name] = corr
+  end
 end
 
 result_fft = NArray.new("complex", target_fft.size)
 
 n = 0
 while heap.max
+  p heap.size
   n += 1
   score, offset, sample_name, sample_fft = heap.pop
   p([ offset / frames_per_second.to_f, sample_name])
   delayed_sample_fft = delay_fft( offset, sample_fft )
   result_fft += delayed_sample_fft
-  #fft_to_file( result_fft,   "partials/output.#{'%05d' % n}.wav", target_data.size, target.info )
+  new_heap = Containers::MaxHeap.new
+  while heap.max
+    score2, offset2, sample2_name, sample2_fft = heap.pop
+    inhibit = sample_sample_correlations[sample_name][sample2_name][ offset2 - offset ].real
+    if inhibit > 0
+      puts "inhibits #{sample2_name} at #{offset2} by #{inhibit}"
+      score2 = score2 - inhibit
+      break if score2 <= 0
+    end
+    new_heap.push [score2, offset2, sample2_name, sample2_fft]
+  end
+  heap = new_heap
+  fft_to_file( result_fft,   "partials/output.#{'%05d' % n}.wav", target_data.size, target.info )
 end
 
 fft_to_file( result_fft,   "output.wav", target_data.size, target.info )
