@@ -46,14 +46,17 @@ sample_data[target_data.real_size - 1] = 0
 target_fft = FFTW3.fft( target_data.entries )
 sample_fft = FFTW3.fft( sample_data.entries )
 
-corr = FFTW3.ifft(target_fft * sample_fft.conj)
+p target_fft
+5.times do
+  corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
-best_match = find_max(corr)
-p best_match
+  best_match = find_max(corr)
+  p( best_match / frames_per_second.to_f )
 
+  delayed_sample_fft = delay_fft( best_match, sample_fft )
 
-delayed_sample_fft = delay_fft( best_match, sample_fft )
+  target_fft = target_fft - delayed_sample_fft
 
-p(target_fft - delayed_sample_fft)
+  p target_fft
+end
 
-# I want to rotate the sample's fft to be at the best_match offset
