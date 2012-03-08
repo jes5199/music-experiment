@@ -16,6 +16,23 @@ def find_max(c)
   return max_i
 end
 
+def delay_fft( delay, fft_data )
+  r = NArray.new("complex", fft_data.size)
+
+  _D = delay
+  _N = fft_data.size
+  k = 0 # fft frame number
+
+  fft_data.each do |f|
+    r[k] = f * Complex(0, (-2 * Math::PI * k * _D / _N))
+    k += 1
+  end
+
+  return r
+end
+
+
+
 target = RubyAudio::Sound.open("AmenMono.wav")
 frames_per_second = target.info.samplerate
 
@@ -33,22 +50,6 @@ corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
 best_match = find_max(corr)
 p best_match
-
-
-def delay_fft( delay, fft_data )
-  r = NArray.new("complex", fft_data.size)
-
-  _D = delay
-  _N = fft_data.size
-  k = 0 # fft frame number
-
-  fft_data.each do |f|
-    r[k] = f * Complex(0, (-2 * Math::PI * k * _D / _N))
-    k += 1
-  end
-
-  return r
-end
 
 
 delayed_sample_fft = delay_fft( best_match, sample_fft )
