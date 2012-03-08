@@ -62,13 +62,13 @@ sample_data[target_data.real_size - 1] = 0
 target_fft = FFTW3.fft( target_data.entries )
 sample_fft = FFTW3.fft( sample_data.entries )
 
-ifft_target_fft = FFTW3.ifft(target_fft)
-(0...ifft_target_fft.size).each do |i|
-  p([ target_data[i], (ifft_target_fft[i].real / 308112.0)]) if (target_data[i] - (ifft_target_fft[i].real / 308112.0)).abs > 0.00000001
-end
+# ifft_target_fft = FFTW3.ifft(target_fft)
+# (0...ifft_target_fft.size).each do |i|
+#   p([ target_data[i], (ifft_target_fft[i].real / 308112.0)]) if (target_data[i] - (ifft_target_fft[i].real / 308112.0)).abs > 0.00000001
+# end
 
-#data_to_file( target_data, "Amen.ifft.wav", target_data.size, target.info, 308112.0 )
-data_to_file( ifft_target_fft, "Amen.ifft.wav", target_data.size, target.info, 308112.0 )
+# #data_to_file( target_data, "Amen.ifft.wav", target_data.size, target.info, 308112.0 )
+# data_to_file( ifft_target_fft, "Amen.ifft.wav", target_data.size, target.info, 308112.0 )
 
 result_fft = NArray.new("complex", target_fft.size)
 
@@ -87,4 +87,4 @@ p target_fft
   p target_fft
 end
 
-fft_to_file( result_fft, "output.wav", target_data.size, target.info )
+fft_to_file( result_fft, "output.wav", target_data.size, target.info, 308112.0 )
