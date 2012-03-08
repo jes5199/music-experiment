@@ -57,33 +57,34 @@ sample = RubyAudio::Sound.open("snare1.wav")
 target_data = target.read(:float, frames_per_second * 20)
 sample_data = RubyAudio::Buffer.new("float", target_data.size, 1)
 sample.read(sample_data)
+sample_length = sample_data.real_size
 sample_data[target_data.real_size - 1] = 0
 
 target_fft = FFTW3.fft( target_data.entries )
 sample_fft = FFTW3.fft( sample_data.entries )
 
-# ifft_target_fft = FFTW3.ifft(target_fft)
-# (0...ifft_target_fft.size).each do |i|
-#   p([ target_data[i], (ifft_target_fft[i].real / 308112.0)]) if (target_data[i] - (ifft_target_fft[i].real / 308112.0)).abs > 0.00000001
-# end
-
-# #data_to_file( target_data, "Amen.ifft.wav", target_data.size, target.info, 308112.0 )
-# data_to_file( ifft_target_fft, "Amen.ifft.wav", target_data.size, target.info, 308112.0 )
-
 result_fft = NArray.new("complex", target_fft.size)
 
-30.times do |i|
-  p i
-  corr = FFTW3.ifft(target_fft * sample_fft.conj)
+corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
-  best_match = find_max(corr)
+i = -1
+best = []
+corr.each{|x| i+=1; best << [x.real, i] if x.real > 3}
+best.sort!
+
+n = 0
+while n < 30
+  correlation, best_match = best.shift
+  p correlation
   p( best_match / frames_per_second.to_f )
-
   delayed_sample_fft = delay_fft( best_match, sample_fft )
-
-  target_fft -= delayed_sample_fft
   result_fft += delayed_sample_fft
+  best.reject!{|cor, match| (best_match - match).abs < sample_length }
+  n += 1
 end
 
+
+#target_fft -= delayed_sample_fft
+
 fft_to_file( result_fft,   "output.wav", target_data.size, target.info )
-fft_to_file( target_fft, "unoutput.wav", target_data.size, target.info )
+# fft_to_file( target_fft, "unoutput.wav", target_data.size, target.info )
