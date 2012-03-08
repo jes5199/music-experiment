@@ -31,9 +31,9 @@ def delay_fft( delay, fft_data )
   return r
 end
 
-def fft_to_file( fft, filename, size, info, scale )
+def fft_to_file( fft, filename, size, info )
   result_data = FFTW3.ifft( fft )
-  data_to_file( result_data, filename, size, info, scale )
+  data_to_file( result_data, filename, size, info, result_data.size )
 end
 
 def data_to_file( data, filename, size, info, scale )
@@ -72,8 +72,8 @@ sample_fft = FFTW3.fft( sample_data.entries )
 
 result_fft = NArray.new("complex", target_fft.size)
 
-p target_fft
-1.times do
+30.times do |i|
+  p i
   corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
   best_match = find_max(corr)
@@ -83,8 +83,7 @@ p target_fft
 
   target_fft -= delayed_sample_fft
   result_fft += delayed_sample_fft
-
-  p target_fft
 end
 
-fft_to_file( result_fft, "output.wav", target_data.size, target.info, 308112.0 )
+fft_to_file( result_fft,   "output.wav", target_data.size, target.info )
+fft_to_file( target_fft, "unoutput.wav", target_data.size, target.info )
