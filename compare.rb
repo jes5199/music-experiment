@@ -31,9 +31,9 @@ def delay_fft( delay, fft_data )
   return r
 end
 
-def fft_to_file( fft, filename, info )
+def fft_to_file( fft, filename, size, info )
   result_data = FFTW3.ifft( fft )
-  result_buffer = RubyAudio::Buffer.new("float", target_data.size, 1)
+  result_buffer = RubyAudio::Buffer.new("float", size, 1)
   i = 0
   result_data.each do |r|
     result_buffer[i] = r.real
@@ -58,6 +58,8 @@ sample_data[target_data.real_size - 1] = 0
 target_fft = FFTW3.fft( target_data.entries )
 sample_fft = FFTW3.fft( sample_data.entries )
 
+fft_to_file( FFTW3.ifft(target_fft), "Amen.ifft.wav", target_data.size, target.info )
+raise "what"
 
 result_fft = NArray.new("complex", target_fft.size)
 
@@ -76,4 +78,4 @@ p target_fft
   p target_fft
 end
 
-fft_to_file( result_fft, "output.wav", target.info )
+fft_to_file( result_fft, "output.wav", target_data.size, target.info )
