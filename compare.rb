@@ -67,24 +67,20 @@ result_fft = NArray.new("complex", target_fft.size)
 
 corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
+local_maximum = 0
 i = -1
-best = []
-corr.each{|x| i+=1; best << [x.real, i] if x.real > 3}
-best.sort!
+corr.each do |x| i+=1;
+  if local_maximum < (i - sample_length)
+    p( local_maximum / frames_per_second.to_f )
+    delayed_sample_fft = delay_fft( local_maximum, sample_fft )
+    result_fft += delayed_sample_fft
+    fft_to_file( result_fft,   "output.wav", target_data.size, target.info )
+    local_maximum = i
+  end
 
-n = 0
-while n < 30
-  correlation, best_match = best.shift
-  p correlation
-  p( best_match / frames_per_second.to_f )
-  delayed_sample_fft = delay_fft( best_match, sample_fft )
-  result_fft += delayed_sample_fft
-  best.reject!{|cor, match| (best_match - match).abs < sample_length }
-  n += 1
+  if corr[i] > corr[local_maximum]
+    local_maximum = i
+  end
 end
 
-
-#target_fft -= delayed_sample_fft
-
 fft_to_file( result_fft,   "output.wav", target_data.size, target.info )
-# fft_to_file( target_fft, "unoutput.wav", target_data.size, target.info )
