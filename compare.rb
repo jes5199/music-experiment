@@ -59,7 +59,7 @@ heap = Containers::MaxHeap.new
 inhibitions = {}
 ffts_by_name = {}
 
-["snare1.wav", "crash.wav"].each do |sample_name|
+["snare1.wav", "snarerim01.wav"].each do |sample_name|
   puts sample_name
   sample = RubyAudio::Sound.open(sample_name)
   sample_data = RubyAudio::Buffer.new("float", target_data.size, 1)
@@ -118,15 +118,15 @@ while heap.max
   while heap.max
     score2, offset2, sample2_name, sample2_fft = heap.pop
     inhibit = sample_sample_correlations[sample_name][sample2_name][ offset2 - offset ].real
-    if inhibit > 0
-      puts "inhibits #{sample2_name} at #{offset2} by #{inhibit}"
+    if false && inhibit > 0.00001
+      puts "inhibits #{sample2_name} at #{offset2 / frames_per_second.to_f} by #{inhibit}"
       score2 = score2 - inhibit
       break if score2 <= 0
     end
     new_heap.push [score2, offset2, sample2_name, sample2_fft]
   end
   heap = new_heap
-  fft_to_file( result_fft,   "partials/output.#{'%05d' % n}.wav", target_data.size, target.info )
+  #fft_to_file( result_fft,   "partials/output.#{'%05d' % n}.wav", target_data.size, target.info )
 end
 
 fft_to_file( result_fft,   "output.wav", target_data.size, target.info )
