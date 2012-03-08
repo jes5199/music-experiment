@@ -67,10 +67,11 @@ result_fft = NArray.new("complex", target_fft.size)
 
 corr = FFTW3.ifft(target_fft * sample_fft.conj)
 
+window_size = (frames_per_second / 10)
 local_maximum = 0
 i = -1
 corr.each do |x| i+=1;
-  if local_maximum < (i - sample_length)
+  if local_maximum < (i - window_size)
     p( local_maximum / frames_per_second.to_f )
     delayed_sample_fft = delay_fft( local_maximum, sample_fft )
     result_fft += delayed_sample_fft
