@@ -3,7 +3,7 @@ require 'fftw3'
 require 'ruby-audio'
 require 'fileutils'
 
-def spectrogram(data, window = 256, step = 1)
+def spectrogram(data, window = 256, step = 128)
   i = -1
   r = []
   data.each_cons(window){ |selection|
