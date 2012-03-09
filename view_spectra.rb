@@ -14,10 +14,10 @@ File.open(spectra_filename) do |f|
   while ! f.eof?
     frame = f.read(frame_length * 64 / 8).unpack("D*")
     frame.each do |val|
-      value = (((val * scaling) + 1) * (2**(8*3 - 1)) ).to_i
-      red = value % 256
-      green = ( value / 256 ) % 256
-      blue = ( value / (256 ** 2) ) % 256
+      value = (((val * scaling) + 1) * (256 * 1.5) ).to_i
+      red = [[value, 0].max, 255].min
+      green = [[value - 256, 0].max, 255].min
+      blue = [value - 256*2, 0].max
       [red, green, blue].each do |v|
         print("%-4d" % v)
       end
