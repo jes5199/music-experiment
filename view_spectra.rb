@@ -1,6 +1,7 @@
 require 'rubygems'
 
 spectra_filename = ARGV[0]
+scaling = 1.0
 
 file_size = File.size(spectra_filename)
 n = 100
@@ -13,7 +14,7 @@ File.open(spectra_filename) do |f|
   while ! f.eof?
     frame = f.read(frame_length * 64 / 8).unpack("D*")
     frame.each do |val|
-      grey = (((val * 10) + 1) * 127).to_i
+      grey = (((val * scaling) + 1) * 127).to_i
       grey = [grey, 255].min
       grey = [grey, 0].max
       print("%-4d" % grey)
