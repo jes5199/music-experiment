@@ -29,7 +29,6 @@ File.open(spectra_filename, "w") do |f|
   f.write([spectra[0].size].pack("Q"))
   spectra.each do |time_slice|
     f.write(time_slice.real.to_s)
-    break
   end
 end
 
