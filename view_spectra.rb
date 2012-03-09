@@ -17,7 +17,7 @@ File.open(spectra_filename) do |f|
       value = (((val * scaling) + 1) * (256 * 1.5) ).to_i
       red = [[value, 0].max, 255].min
       green = [[value - 256, 0].max, 255].min
-      blue = [value - 256*2, 0].max
+      blue = [[value - 256*2, 0].max, 255].min
       [red, green, blue].each do |v|
         print("%-4d" % v)
       end
