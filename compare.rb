@@ -49,10 +49,10 @@ def data_to_file( data, filename, size, info, scale )
   output.close
 end
 
-
 target = RubyAudio::Sound.open("AmenMono.wav")
 frames_per_second = target.info.samplerate
 target_data = target.read(:float, frames_per_second * 20)
+
 target_fft = FFTW3.fft( target_data.entries )
 
 heap = Containers::MaxHeap.new
