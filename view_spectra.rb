@@ -1,7 +1,7 @@
 require 'rubygems'
 
 spectra_filename = ARGV[0]
-scaling = 1.0
+scaling = 10.0
 
 file_size = File.size(spectra_filename)
 n = 100
