@@ -34,6 +34,8 @@ input_filename = ARGV[0]
 FileUtils.mkdir_p("spectra")
 spectra_filename = "spectra/#{input_filename}.spectra"
 
+exit if File.exists?(spectra_filename)
+
 input_sound = RubyAudio::Sound.open(input_filename)
 frames_per_second = input_sound.info.samplerate
 input_data = input_sound.read(:float, frames_per_second * 20)
