@@ -71,8 +71,12 @@ def data_to_file( data, filename, size, info, scale )
     result_buffer[i] = (r.respond_to?(:real) ? r.real : r.to_f) / scale
     i += 1
   end
+  buffer_to_file( result_buffer, info )
+end
+
+def buffer_to_file( buffer, filename, info)
   output = RubyAudio::Sound.new(filename, "w", info)
-  output.write(result_buffer)
+  output.write(buffer)
   output.close
 end
 
@@ -119,15 +123,33 @@ index = 0
   index += 1
 end
 
-result_fft = NArray.new("complex", target_fft.size)
-peaks.each do |offset|
-  time = offset / steps_per_second
-  p time
+size, info = save_params_for(target_filename)
+result_buffer = RubyAudio::Buffer.new("float", size, 1)
 
-  delayed_sample_fft = delay_fft( offset * FRAME_STEPS, sample_fft )
-  result_fft += delayed_sample_fft
+sample = RubyAudio::Sound.open(sample_filename)
+sample_data = RubyAudio::Buffer.new("float", sample.info.frames, 1)
+sample.read(sample_data)
 
-  fft_to_file( result_fft, "output.wav", *save_params_for(target_filename))
+p peaks
+
+sounding = []
+size.times do |i|
+  time = i / frames_per_second.to_f
+  if peaks[0] and (peaks[0] * FRAME_STEPS) == i
+    p time
+
+    sounding << [i, sample_data]
+    peaks.shift
+  end
+
+  sounding.reject! do |n, data|
+    (i-n) >= sample.info.frames
+  end
+
+  if sounding.length > 0
+    value = sounding.map { |n, data| data[i-n] }.inject(:+) / sounding.length
+    result_buffer[i] = value
+  end
 end
 
-fft_to_file( result_fft, "output.wav", *save_params_for(target_filename))
+buffer_to_file(result_buffer, "output.wav", info)
