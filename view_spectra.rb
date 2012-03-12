@@ -1,7 +1,7 @@
 require 'rubygems'
 
 spectra_filename = ARGV[0]
-scaling = 0.5
+scaling = 1.5
 
 file_size = File.size(spectra_filename)
 n = 100
@@ -17,7 +17,7 @@ File.open(spectra_filename) do |f|
     frame.each do |val|
       break if i >= frame.length/2
       i += 1
-      val = val.abs ** 2
+      val = val.abs # ** 2
       value = (((val * scaling) + 0) * (256 * 3) ).to_i
       blue = [[value, 0].max, 255].min
       green = [[value - 256, 0].max, 255].min
