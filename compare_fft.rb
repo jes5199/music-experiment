@@ -3,8 +3,6 @@ require 'fftw3'
 require 'ruby-audio'
 require 'algorithms'
 
-FRAME_STEPS = 128
-
 def read_spectra_from_file(spectra_filename, rows = 0)
   spectra = []
   frame_length = nil
@@ -27,10 +25,15 @@ def read_spectra_from_file(spectra_filename, rows = 0)
   return NArray[ *spectra ]
 end
 
-def spectra_for_soundfile(filename, rows = 0)
+def fft_for_soundfile( filename, size = nil)
   sound = RubyAudio::Sound.open(filename)
-  spectra_filename = "spectra/#{filename}.spectra"
-  return read_spectra_from_file(spectra_filename, rows)
+
+  sound_buffer = RubyAudio::Buffer.new("float", size || sound.info.frames, 1)
+  sound.read(sound_buffer)
+
+  sound_buffer[size - 1] ||= 0 if size
+
+  return FFTW3.fft( sound_buffer.entries )
 end
 
 def frames_per_second_for_sound(filename)
@@ -87,30 +90,22 @@ end
 
 target_filename = "AmenMono.wav"
 frames_per_second = frames_per_second_for_sound(target_filename)
-target_spectra = spectra_for_soundfile(target_filename)
-target_fft = FFTW3.fft( target_spectra )
+target_fft = fft_for_soundfile(target_filename)
 
 sample_filename = "snare1.wav"
-sample_spectra = spectra_for_soundfile(sample_filename, target_spectra.sizes[1])
+sample_fft = fft_for_soundfile(sample_filename, target_fft.size)
 
-sample_fft = FFTW3.fft( sample_spectra )
+steps_per_second = frames_per_second.to_f
 
 corr = FFTW3.ifft(target_fft * sample_fft.conj).real
-corr_flat = []
-(0...corr.sizes[1]).each do |i|
-  val = corr[i * corr.sizes[0]]
-  corr_flat << val
-end
-
-steps_per_second = (frames_per_second.to_f / FRAME_STEPS)
 
 peaks = []
 window_size =  steps_per_second / 20
 blanks = [0] * (window_size / 2)
 index = 0
-(blanks + corr_flat + blanks).each_cons(window_size) do |window|
+(blanks + corr.to_a + blanks).each_cons(window_size) do |window|
   if window[ window_size / 2 ] == window.max
-    raise "oops" if window[ window_size / 2 ] != corr_flat[index]
+    raise "oops" if window[ window_size / 2 ] != corr[index]
     peaks << index
   end
   index += 1
@@ -128,7 +123,7 @@ p peaks
 sounding = []
 size.times do |i|
   time = i / frames_per_second.to_f
-  if peaks[0] and (peaks[0] * FRAME_STEPS) == i
+  if peaks[0] and peaks[0] == i
     p time
 
     sounding << [i, sample_data]
