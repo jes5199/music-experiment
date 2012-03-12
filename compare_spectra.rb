@@ -3,6 +3,8 @@ require 'fftw3'
 require 'ruby-audio'
 require 'algorithms'
 
+FRAME_STEPS = 128
+
 def read_spectra_from_file(spectra_filename, rows = 0)
   spectra = []
   frame_length = nil
@@ -31,6 +33,11 @@ def spectra_for_soundfile(filename, rows = 0)
   return read_spectra_from_file(spectra_filename, rows)
 end
 
+def frames_per_second_for_sound(filename)
+  sound = RubyAudio::Sound.open(filename)
+  return sound.info.samplerate
+end
+
 def fps_for_soundfile(filename)
   sound = RubyAudio::Sound.open(filename)
   frames_per_second = sound.info.samplerate
@@ -38,25 +45,22 @@ def fps_for_soundfile(filename)
 end
 
 target_filename = "AmenMono.wav"
+frames_per_second = frames_per_second_for_sound(target_filename)
 target_spectra = spectra_for_soundfile(target_filename)
 target_fft = FFTW3.fft( target_spectra )
-p target_spectra
-p target_fft.sizes
-p target_fft
 
 sample_filename = "snare1.wav"
 sample_spectra = spectra_for_soundfile(sample_filename, target_spectra.sizes[1])
 
 sample_fft = FFTW3.fft( sample_spectra )
-p sample_spectra
-p sample_fft.sizes
-p sample_fft
-
-corr = FFTW3.ifft(target_fft * sample_fft.conj).real
-p corr.sizes
-(0...corr.sizes[1]).each do |i|
-  print corr[i * corr.sizes[0]], " "
-end
-puts
 
 heap = Containers::MaxHeap.new
+corr = FFTW3.ifft(target_fft * sample_fft.conj).real
+(0...corr.sizes[1]).each do |i|
+  heap.push [ corr[i * corr.sizes[0]], i]
+end
+
+score, index = heap.max
+time = (index * FRAME_STEPS) / frames_per_second.to_f
+
+
