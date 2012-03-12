@@ -82,9 +82,7 @@ end
 
 def save_params_for(sound_filename)
   sound = RubyAudio::Sound.open(sound_filename)
-  frames_per_second = sound.info.samplerate
-  target_data = sound.read(:float, frames_per_second * 20)
-  [target_data.size, sound.info]
+  [sound.info.frames, sound.info]
 end
 
 target_filename = "AmenMono.wav"
