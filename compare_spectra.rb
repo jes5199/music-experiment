@@ -140,7 +140,7 @@ size.times do |i|
   end
 
   if sounding.length > 0
-    value = sounding.map { |n, data| data[i-n] }.inject(:+) / sounding.length
+    value = sounding.map { |n, data| data[i-n] }.inject(:+)
     result_buffer[i] = value
   end
 end
