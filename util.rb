@@ -1,3 +1,10 @@
+def read_data( sample_filename )
+  sample = RubyAudio::Sound.open(sample_filename)
+  sample_data = RubyAudio::Buffer.new("float", sample.info.frames, 1)
+  sample.read(sample_data)
+  return sample_data
+end
+
 def read_spectra_from_file(spectra_filename, rows = 0)
   spectra = []
   frame_length = nil
