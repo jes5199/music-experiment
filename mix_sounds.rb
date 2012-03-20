@@ -1,26 +1,20 @@
 require 'rubygems'
 require 'ruby-audio'
 
-def read_data( sample_filename )
-  sample = RubyAudio::Sound.open(sample_filename)
-  sample_data = RubyAudio::Buffer.new("float", sample.info.frames, 1)
-  sample.read(sample_data)
-  return sample_data
-end
-
-def buffer_to_file( buffer, filename, info)
-  output = RubyAudio::Sound.new(filename, "w", info)
-  output.write(buffer)
-  output.close
-end
+require "util"
 
 def get_next_sound
-  if ARGF.eof?
-    next_sound = nil
-  else
-    next_sound_frame, next_sound_file_name = ARGF.readline.split(/\s+/)
-    next_sound = [ next_sound_frame.to_i, next_sound_file_name ]
-  end
+  line = nil
+  begin
+    if ARGF.eof?
+      next_sound = nil
+      return
+    end
+    line = ARGF.readline
+  end while line =~ /^\s*#/
+
+  next_sound_frame, next_sound_file_name = line.split(/\s+/)
+  next_sound = [ next_sound_frame.to_i, next_sound_file_name ]
 end
 
 size = ARGF.readline.to_i
