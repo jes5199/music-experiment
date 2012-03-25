@@ -16,7 +16,7 @@ def make_tone( frequency = 440.0, duration = 1.0, frames_per_second = 44100 )
   end
 end
 
-def duration_of_one_beat_at_bpm(n = 140)
+def duration_of_one_beat_at_bpm(n)
   60 / n.to_f
 end
 
@@ -35,13 +35,15 @@ end
 
 c_major_scale = [-9,-7,-5,-4,-2,0,2,3]
 
+strength = 0.75
+
 result_buffer = RubyAudio::Buffer.new("float", 44100 * 13, 1)
 i = 0
 c_major_scale.each do |note|
   f = 440 * (2 ** (note/12.0))
   p f
-  make_tone(f, duration_of_one_beat_at_bpm(140)) do |val|
-    result_buffer[i] = val
+  make_tone(f, duration_of_one_beat_at_bpm(120) / 2) do |val|
+    result_buffer[i] = val * strength
     i += 1
   end
 end
