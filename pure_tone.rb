@@ -9,7 +9,9 @@ def make_tone( frequency = 440.0, duration = 1.0, frames_per_second = 44100 )
   tau = Math::PI * 2
   step = tau / cycles_per_tau
 
-  (frames_per_second * duration).to_i.times do |n|
+  cycles = (frequency * duration).ceil
+
+  (cycles * cycles_per_tau).to_i.times do |n|
     yield Math.sin(n * step)
   end
 end
@@ -27,9 +29,11 @@ end
 # 10 G
 # 11 G#
 
+c_major_scale = [3,5,7,8,10,12,14,15]
+
 result_buffer = RubyAudio::Buffer.new("float", 44100 * 13, 1)
 i = 0
-[3,5,7,8,10,12,14,15].each do |note|
+c_major_scale.each do |note|
   f = 220 * (2 ** (note/12.0))
   p f
   make_tone(f) do |val|
