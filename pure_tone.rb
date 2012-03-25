@@ -16,6 +16,22 @@ def make_tone( frequency = 440.0, duration = 1.0, frames_per_second = 44100 )
   end
 end
 
+def make_square_wave( frequency = 440.0, duration = 1.0, frames_per_second = 44100 )
+  cycles_per_tau = frames_per_second / frequency.to_f
+  tau = Math::PI * 2
+  step = tau / cycles_per_tau
+
+  cycles = (frequency * duration).ceil
+
+  (cycles * cycles_per_tau).to_i.times do |n|
+    if Math.sin(n * step) > 0
+      yield 1
+    else
+      yield -1
+    end
+  end
+end
+
 def duration_of_one_beat_at_bpm(n)
   60 / n.to_f
 end
@@ -42,7 +58,7 @@ i = 0
 c_major_scale.each do |note|
   f = 440 * (2 ** (note/12.0))
   p f
-  make_tone(f, duration_of_one_beat_at_bpm(120) / 2) do |val|
+  make_square_wave(f, duration_of_one_beat_at_bpm(120) / 2) do |val|
     result_buffer[i] = val * strength
     i += 1
   end
