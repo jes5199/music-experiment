@@ -28,6 +28,19 @@ def make_tone( frequency = 440.0, duration = 1.0, frames_per_second = 44100 )
   end
 end
 
+def make_tone_bounce( frequency = 440.0, duration = 1.0, frames_per_second = 44100 )
+  frequency /= 2
+  cycles_per_tau = frames_per_second / frequency.to_f
+  tau = Math::PI * 2
+  step = tau / cycles_per_tau
+
+  cycles = (frequency * duration).ceil
+
+  (cycles * cycles_per_tau).to_i.times do |n|
+    yield Math.sin(n * step).abs
+  end
+end
+
 def make_square_wave( frequency = 440.0, duration = 1.0, frames_per_second = 44100 )
   cycles_per_tau = frames_per_second / frequency.to_f
   tau = Math::PI * 2
@@ -60,7 +73,7 @@ def make_sawtooth_wave( frequency = 440.0, duration = 1.0, frames_per_second = 4
     when 0
       yield x * saw_step
     when 1
-      yield( ( x - (cycles_per_tau / 2)) * saw_step)
+      yield( (x - cycles_per_tau) * saw_step)
     else
       raise section.inspect
     end
@@ -116,8 +129,8 @@ strength = 0.75
 result_buffer = RubyAudio::Buffer.new("float", 44100 * 60, 1)
 i = 0
 
-[:make_sawtooth_wave].each do |method|
-#[:make_tone, :make_tone_chop, :make_triangle_wave, :make_square_wave].each do |method|
+#[:make_tone, :make_tone_bounce, :make_triangle_wave, :make_sawtooth_wave, :make_square_wave].each do |method|
+[:make_tone].each do
   c_major_scale.each do |note|
     f = 440 * (2 ** (note/12.0))
     p f
